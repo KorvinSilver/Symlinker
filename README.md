@@ -31,6 +31,7 @@ Example Directory structure:
 - Documents
 - Pictures
 - Videos
+- lorem_ipsum.txt
 - symlinker.py
 
 ##### Create link "Important" pointing to "Documents"
@@ -116,3 +117,12 @@ Videos --> .external/Videos
 .config/betalib32 --> ../.cfg/betalib_old
 .config/gammalib32 --> ../.cfg/gammalib_old
 ```
+
+##### Create hard link (not every OS supports this):
+
+```
+$ ./symlinker.py hardlink lorem_ipsum.txt lipsum.txt
+```
+
+More on hard links:
+https://en.wikipedia.org/wiki/Hard_link
