@@ -183,6 +183,14 @@ def batch_modify(path, pattern, new_pattern, recursive):
 
 
 def create_hardlink(dest, lin):
+    """
+    Creates a hard link
+
+    :param dest: existing file
+    :type dest: str
+    :param lin: new filename
+    :type lin: str
+    """
     if not os.access(dest, os.F_OK):
         print("Destination doesn't exist or not accessible.")
     elif not os.access(dest, os.R_OK):
