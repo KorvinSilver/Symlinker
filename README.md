@@ -118,7 +118,7 @@ Videos --> .external/Videos
 .config/gammalib32 --> ../.cfg/gammalib_old
 ```
 
-##### Create hard link (not every OS supports this):
+##### Create hard link (not every file system supports this):
 
 ```
 $ ./symlinker.py hardlink lorem_ipsum.txt lipsum.txt
