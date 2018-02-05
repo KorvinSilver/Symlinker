@@ -59,19 +59,19 @@ def create_symlink(dest, sym, change):
     :type change: bool
     """
     if not os.access(dest, os.F_OK):
-        print("Destination doesn't exist or not accessible.")
+        print(f"Destination doesn't exist or not accessible: '{dest}'")
     elif not os.access(dest, os.R_OK):
-        print("You don't have permission to read destination.")
+        print(f"You don't have permission to read destination: '{dest}'")
     elif change:
         if not os.access(sym, os.F_OK):
-            print("Symlink doesn't exist.")
+            print(f"Symlink doesn't exist: '{sym}'")
         elif not os.access(sym, os.W_OK):
-            print("You don't have permission to modify symlink")
+            print(f"You don't have permission to modify symlink: '{sym}'")
         else:
             os.remove(sym)
             os.symlink(dest, sym)
     elif os.access(sym, os.F_OK):
-        print("Symlink already exists.")
+        print(f"Symlink already exists: '{sym}'")
     else:
         try:
             os.symlink(dest, sym)
@@ -164,8 +164,21 @@ def batch_modify(path, pattern, new_pattern, recursive):
     :type recursive: bool
     """
     links = symlink_by_pattern(path, pattern, recursive)
-    for i in links:
-        create_symlink(i[1].replace(pattern, new_pattern), i[0], True)
+    for sym, dest in links:
+        # Get current working directory
+        cwd = os.getcwd()
+        try:
+            # Change dir to directory of sym to compensate for
+            # relative destination paths
+            os.chdir(os.path.dirname(sym))
+            # Replace path to sym with filename of sym
+            sym = sym[len(os.path.dirname(sym))+1:]
+        except FileNotFoundError:
+            # sym is in cwd, can't change dir to ""
+            pass
+        create_symlink(dest.replace(pattern, new_pattern), sym, True)
+        # Change dir to original working directory
+        os.chdir(cwd)
 
 
 def create_hardlink(dest, lin):
