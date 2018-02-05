@@ -303,7 +303,7 @@ if __name__ == "__main__":
             for symlink, destination in symlink_by_pattern(args.path,
                                                            args.pattern,
                                                            args.recursive):
-                print(symlink, "-->", destination)
+                print(symlink, "->", destination)
             sys.exit()
     except AttributeError:
         pass
@@ -313,7 +313,7 @@ if __name__ == "__main__":
         if args.path is not None:
             for symlink, destination in all_symlinks(args.path,
                                                      args.recursive):
-                print(symlink, "-->", destination)
+                print(symlink, "->", destination)
             sys.exit()
     except AttributeError:
         pass
