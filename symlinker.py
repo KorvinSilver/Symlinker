@@ -4,7 +4,8 @@
 """
 Project: Symlinker
 
-A tool to create symbolic links or modify their destinations.
+A tool to create, search and find symbolic links, or modify their
+destinations.
 
 Copyright 2018, Korvin F. Ezüst
 
