@@ -4,6 +4,34 @@
 
 Requirements: Python 3.6 or higher
 
+Note: The examples show usage on Linux
+
+#### View built-in help messages:
+
+```
+$ ./symlinker.py -h
+```
+
+```
+$ ./symlinker.py link -h
+```
+
+```
+$ ./symlinker.py search -h
+```
+
+```
+$ ./symlinker.py find -h
+```
+
+```
+$ ./symlinker.py batch -h
+```
+
+```
+$ ./symlinker.py hardlink -h
+```
+
 #### Example usage:
 
 Example directory structure:
@@ -50,10 +78,23 @@ $ ./symlinker.py link Documents Important
 $ ./symlinker.py link -c Backup Important
 ```
 
+##### Create link with absolute path:
+
+```
+$ ./symlinker.py link -a .external External
+```
+
+##### Modify link with absolute path:
+
+```
+$ ./symlinker.py link -ac .internal External
+```
+
 ##### Search symlinks in current directory:
 
 ```
 $ ./symlinker.py search .
+External -> /home/dev/Symlinker_Tester/.internal
 Important -> Backup
 Pictures -> .internal/Pictures
 Videos -> .internal/Videos
@@ -64,6 +105,7 @@ Videos -> .internal/Videos
 ```
 $ ./symlinker.py search -r .
 .config/lib32 -> ../.cfg/lib32
+External -> /home/dev/Symlinker_Tester/.internal
 Important -> Backup
 Pictures -> .internal/Pictures
 Videos -> .internal/Videos
@@ -97,7 +139,8 @@ $ ./symlinker.py batch . "internal" "external"
 see changes:
 
 ```
-$ ./symlinker.py search .                     
+$ ./symlinker.py search .
+External -> /home/dev/Symlinker_Tester/.external
 Important -> Backup
 Pictures -> .external/Pictures
 Videos -> .external/Videos
@@ -112,14 +155,35 @@ $ ./symlinker.py batch -r . "lib32" "lib_old"
 see changes:
 
 ```
-$ ./symlinker.py search -r .                 
+$ ./symlinker.py search -r .
 .config/lib32 -> ../.cfg/lib_old
+External -> /home/dev/Symlinker_Tester/.external
 Important -> Backup
 Pictures -> .external/Pictures
 Videos -> .external/Videos
 .config/alphalib32 -> ../.cfg/alphalib_old
 .config/betalib32 -> ../.cfg/betalib_old
 .config/gammalib32 -> ../.cfg/gammalib_old
+```
+
+##### Change destination but with absolute path:
+
+```
+$ ./symlinker.py batch -ra . "lib_old" "lib32"
+```
+
+see changes:
+
+```
+$ ./symlinker.py search -r .
+.config/lib32 -> /home/dev/Symlinker_Tester/.cfg/lib32
+External -> /home/dev/Symlinker_Tester/.external
+Important -> Backup
+Pictures -> .external/Pictures
+Videos -> .external/Videos
+.config/alphalib32 -> /home/dev/Symlinker_Tester/.cfg/alphalib32
+.config/betalib32 -> /home/dev/Symlinker_Tester/.cfg/betalib32
+.config/gammalib32 -> /home/dev/Symlinker_Tester/.cfg/gammalib32
 ```
 
 ##### Create hard link (not every file system supports this):
