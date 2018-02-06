@@ -109,24 +109,23 @@ def all_symlinks(path, recursive):
             """
             nonlocal path
 
-            # This will hold the symlinks and their destinations
-            links = []
+            # These will hold the symlinks and their destinations
+            file_links = []
+            dir_links = []
             # Create a list of files and directories in path
             p = pathlib.Path(path).glob(r)
-            # Append all symlinks pointing to directories to links
-            for it in sorted([str(i) for i in p if i.is_dir()],
+            # Create a case insensitive sorted list and iterate over it
+            for it in sorted([str(i) for i in p],
                              key=lambda x: x.lower()):
                 if os.path.islink(it):
-                    links.append((it, os.readlink(it)))
-
-            # Create a list of files and directories in path
-            p = pathlib.Path(path).glob(r)
-            # Append all symlinks pointing to files to links
-            for it in sorted([str(i) for i in p if i.is_file()],
-                             key=lambda x: x.lower()):
-                if os.path.islink(it):
-                    links.append((it, os.readlink(it)))
-            return links
+                    # Append file links
+                    if os.path.isfile(it):
+                        file_links.append((it, os.readlink(it)))
+                    # Append directory links
+                    else:
+                        dir_links.append((it, os.readlink(it)))
+            # Return merged lists
+            return dir_links + file_links
 
         if recursive:
             return symlinks("**/*")
