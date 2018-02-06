@@ -48,7 +48,7 @@ def error_message(e):
     return f"Error: [Errno {errno}] {strerror}"
 
 
-def create_symlink(dest, sym, change):
+def create_symlink(dest, sym, change, abs_path):
     """
     Creates or modifies a symbolic link
 
@@ -58,15 +58,22 @@ def create_symlink(dest, sym, change):
     :type sym: str
     :param change: indicates whether sym has to be redirected
     :type change: bool
+    :param abs_path: indicates whether the sym should convert to absolute path
+    :type abs_path: bool
     """
+    if abs_path:
+        dest = os.path.abspath(dest)
     if not os.access(dest, os.F_OK):
         print(f"Destination doesn't exist or not accessible: '{dest}'")
     elif not os.access(dest, os.R_OK):
         print(f"You don't have permission to read destination: '{dest}'")
     elif change:
-        if not os.access(sym, os.F_OK):
+        if not os.path.islink(sym) and os.access(sym, os.F_OK):
+            print(f"Target exists as a non-symlink: '{sym}'")
+        elif not os.path.islink(sym):
             print(f"Symlink doesn't exist: '{sym}'")
-        elif not os.access(sym, os.W_OK):
+        # with the second condition compensate for broken links
+        elif not os.access(sym, os.W_OK) and not os.path.islink(sym):
             print(f"You don't have permission to modify symlink: '{sym}'")
         else:
             os.remove(sym)
@@ -150,7 +157,7 @@ def symlink_by_pattern(path, pattern, recursive):
     return [i for i in all_symlinks(path, recursive) if pattern in i[1]]
 
 
-def batch_modify(path, pattern, new_pattern, recursive):
+def batch_modify(path, pattern, new_pattern, abs_path, recursive):
     """
     Changes the destinations of symbolic links by replacing pattern in the
     path of each destination with new_pattern
@@ -161,6 +168,8 @@ def batch_modify(path, pattern, new_pattern, recursive):
     :type pattern: str
     :param new_pattern: new pattern to replace pattern with
     :type new_pattern: str
+    :param abs_path: indicates whether the sym should convert to absolute path
+    :type abs_path: bool
     :param recursive: indicates whether to search path recursively
     :type recursive: bool
     """
@@ -173,11 +182,11 @@ def batch_modify(path, pattern, new_pattern, recursive):
             # relative destination paths
             os.chdir(os.path.dirname(sym))
             # Replace path to sym with filename of sym
-            sym = sym[len(os.path.dirname(sym))+1:]
+            sym = sym[len(os.path.dirname(sym)) + 1:]
         except FileNotFoundError:
             # sym is in cwd, can't change dir to ""
             pass
-        create_symlink(dest.replace(pattern, new_pattern), sym, True)
+        create_symlink(dest.replace(pattern, new_pattern), sym, abs_path, True)
         # Change dir to original working directory
         os.chdir(cwd)
 
@@ -225,6 +234,10 @@ if __name__ == "__main__":
     linker.add_argument("-c", "--change-destination",
                         action="store_true",
                         help="change the destination of the symbolic link")
+    linker.add_argument("-a", "--absolute_path",
+                        action="store_true",
+                        help="create the symlink with absolute path to its "
+                             "destination")
 
     # Arguments to search for symlinks
     search = subparsers.add_parser("search",
@@ -260,6 +273,10 @@ if __name__ == "__main__":
                             "symbolic links")
     batch.add_argument("-r", "--recursive", action="store_true",
                        help="search path recursively")
+    batch.add_argument("-a", "--absolute_path",
+                       action="store_true",
+                       help="recreate the symlink with absolute path to their "
+                            "destinations")
 
     # Arguments to create hard link
     hardlink = subparsers.add_parser("hardlink",
@@ -279,7 +296,8 @@ if __name__ == "__main__":
         if args.destination is not None and args.symlink is not None:
             create_symlink(args.destination,
                            args.symlink,
-                           args.change_destination)
+                           args.change_destination,
+                           args.absolute_path)
             sys.exit()
     except AttributeError:
         pass
@@ -292,6 +310,7 @@ if __name__ == "__main__":
             batch_modify(args.path,
                          args.pattern,
                          args.newPattern,
+                         args.absolute_path,
                          args.recursive)
             sys.exit()
     except AttributeError:
