@@ -186,7 +186,7 @@ def batch_modify(path, pattern, new_pattern, abs_path, recursive):
         except FileNotFoundError:
             # sym is in cwd, can't change dir to ""
             pass
-        create_symlink(dest.replace(pattern, new_pattern), sym, abs_path, True)
+        create_symlink(dest.replace(pattern, new_pattern), sym, True, abs_path)
         # Change dir to original working directory
         os.chdir(cwd)
 
