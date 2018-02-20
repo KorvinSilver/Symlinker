@@ -30,7 +30,7 @@ import sys
 __author__ = "Korvin F. Ezüst"
 __copyright__ = "Copyright (c) 2018, Korvin F. Ezüst"
 __license__ = "Apache 2.0"
-__version__ = "1.0"
+__version__ = "1.1"
 __email__ = "dev@korvin.eu"
 __status__ = "Active"
 
@@ -140,6 +140,32 @@ def all_symlinks(path, recursive):
             return symlinks("*")
 
 
+def all_symlinks_generator(path, recursive):
+    """
+    Similar to all_symlinks() but yields results one by one
+
+    :param path: path to search
+    :type path: str
+    :param recursive: indicates whether to search path recursively
+    :type recursive: bool
+    :return: symlink and its destination
+    :rtype: tuple
+    """
+    if not os.access(path, os.F_OK):
+        print("Path doesn't exist or not accessible.")
+    elif not os.access(path, os.R_OK):
+        print("You don't have permission to read path.")
+    else:
+        if recursive:
+            r = "**/*"
+        else:
+            r = "*"
+        p = pathlib.Path(path).glob(r)
+        for i in p:
+            if os.path.islink(str(i)):
+                yield str(i), os.readlink(str(i))
+
+
 def symlink_by_pattern(path, pattern, recursive):
     """
     Returns a list of tuples. Each tuple contains a symbolic link and its
@@ -155,6 +181,24 @@ def symlink_by_pattern(path, pattern, recursive):
     :rtype: list
     """
     return [i for i in all_symlinks(path, recursive) if pattern in i[1]]
+
+
+def symlink_by_pattern_generator(path, pattern, recursive):
+    """
+    Similar to symlink_by_pattern() but yields results one by one
+
+    :param path: path to search
+    :type path: str
+    :param pattern: pattern to search for
+    :type pattern: str
+    :param recursive: indicates whether to search path recursively
+    :type recursive: bool
+    :return: symlink and its destination
+    :rtype: tuple
+    """
+    for sym, dest in all_symlinks_generator(path, recursive):
+        if pattern in sym:
+            yield sym, dest
 
 
 def batch_modify(path, pattern, new_pattern, abs_path, recursive):
@@ -246,6 +290,9 @@ if __name__ == "__main__":
                         help="search this path for symbolic links")
     search.add_argument("-r", "--recursive", action="store_true",
                         help="search path recursively")
+    search.add_argument("-s", "--sort", action="store_true",
+                        help="sort the output. This might be a long process "
+                             "and you'll see output only after it's finished")
 
     # Arguments to find symlink
     find = subparsers.add_parser("find",
@@ -256,6 +303,9 @@ if __name__ == "__main__":
                       help="pattern to search for in destinations")
     find.add_argument("-r", "--recursive", action="store_true",
                       help="search path recursively")
+    find.add_argument("-s", "--sort", action="store_true",
+                      help="sort the output. This might be a long process "
+                           "and you'll see output only after it's finished")
 
     # Arguments to batch modify symlinks
     batch = subparsers.add_parser(
@@ -307,11 +357,13 @@ if __name__ == "__main__":
         if args.path is not None \
                 and args.pattern is not None \
                 and args.newPattern is not None:
+            print("Working. This might take a while...")
             batch_modify(args.path,
                          args.pattern,
                          args.newPattern,
                          args.absolute_path,
                          args.recursive)
+            print("Done.")
             sys.exit()
     except AttributeError:
         pass
@@ -319,9 +371,14 @@ if __name__ == "__main__":
     # Search symlink by pattern
     try:
         if args.path is not None and args.pattern is not None:
-            for symlink, destination in symlink_by_pattern(args.path,
-                                                           args.pattern,
-                                                           args.recursive):
+            if args.sort:
+                print("Working. This might take a long time...")
+                f = symlink_by_pattern(args.path, args.pattern, args.recursive)
+            else:
+                f = symlink_by_pattern_generator(args.path,
+                                                 args.pattern,
+                                                 args.recursive)
+            for symlink, destination in f:
                 print(symlink, "->", destination)
             sys.exit()
     except AttributeError:
@@ -330,8 +387,12 @@ if __name__ == "__main__":
     # Search symlinks
     try:
         if args.path is not None:
-            for symlink, destination in all_symlinks(args.path,
-                                                     args.recursive):
+            if args.sort:
+                print("Working. This might take a long time...")
+                f = all_symlinks(args.path, args.recursive)
+            else:
+                f = all_symlinks_generator(args.path, args.recursive)
+            for symlink, destination in f:
                 print(symlink, "->", destination)
             sys.exit()
     except AttributeError:
