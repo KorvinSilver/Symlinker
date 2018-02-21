@@ -282,6 +282,7 @@ if __name__ == "__main__":
                         action="store_true",
                         help="create the symlink with absolute path to its "
                              "destination")
+    linker.set_defaults(which="linker")
 
     # Arguments to search for symlinks
     search = subparsers.add_parser("search",
@@ -293,6 +294,12 @@ if __name__ == "__main__":
     search.add_argument("-s", "--sort", action="store_true",
                         help="sort the output. This might be a long process "
                              "and you'll see output only after it's finished")
+    search.add_argument("-t", "--type", action="store_true",
+                        help="type of link. Display a single character (b, "
+                             "d or f) in front of each line indicating if "
+                             "the link points to a broken link, directory or "
+                             "a file")
+    search.set_defaults(which="search")
 
     # Arguments to find symlink
     find = subparsers.add_parser("find",
@@ -306,6 +313,11 @@ if __name__ == "__main__":
     find.add_argument("-s", "--sort", action="store_true",
                       help="sort the output. This might be a long process "
                            "and you'll see output only after it's finished")
+    find.add_argument("-t", "--type", action="store_true",
+                      help="type of link. Display a single character (b, d or "
+                           "f) in front of each line indicating if the link "
+                           "points to a broken link, directory or a file")
+    find.set_defaults(which="find")
 
     # Arguments to batch modify symlinks
     batch = subparsers.add_parser(
@@ -327,6 +339,20 @@ if __name__ == "__main__":
                        action="store_true",
                        help="recreate the symlink with absolute path to their "
                             "destinations")
+    batch.set_defaults(which="batch")
+
+    # Arguments to search for broken symlinks
+    broken = subparsers.add_parser(
+        "broken",
+        description="Search for broken symbolic links only"
+    )
+    broken.add_argument("path", help="search this path for symbolic links")
+    broken.add_argument("-r", "--recursive", action="store_true",
+                        help="search path recursively")
+    broken.add_argument("-s", "--sort", action="store_true",
+                        help="sort the output. This might be a long process "
+                             "and you'll see output only after it's finished")
+    broken.set_defaults(which="broken")
 
     # Arguments to create hard link
     hardlink = subparsers.add_parser("hardlink",
@@ -334,6 +360,7 @@ if __name__ == "__main__":
     hardlink.add_argument("destination",
                           help="destination where the hard link will point to")
     hardlink.add_argument("link", help="name of the hard link")
+    hardlink.set_defaults(which="hardlink")
 
     args = parser.parse_args()
 
@@ -342,18 +369,16 @@ if __name__ == "__main__":
         sys.exit()
 
     # Create or change symlink
-    try:
+    if args.which == "linker":
         if args.destination is not None and args.symlink is not None:
             create_symlink(args.destination,
                            args.symlink,
                            args.change_destination,
                            args.absolute_path)
             sys.exit()
-    except AttributeError:
-        pass
 
     # Batch modify symlinks
-    try:
+    if args.which == "batch":
         if args.path is not None \
                 and args.pattern is not None \
                 and args.newPattern is not None:
@@ -364,12 +389,9 @@ if __name__ == "__main__":
                          args.absolute_path,
                          args.recursive)
             print("Done.")
-            sys.exit()
-    except AttributeError:
-        pass
 
-    # Search symlink by pattern
-    try:
+    # Find symlink by pattern
+    if args.which == "find":
         if args.path is not None and args.pattern is not None:
             if args.sort:
                 print("Working. This might take a long time...")
@@ -379,13 +401,17 @@ if __name__ == "__main__":
                                                  args.pattern,
                                                  args.recursive)
             for symlink, destination in f:
+                if args.type:
+                    if not os.access(symlink, os.F_OK):
+                        print("b ", end="")
+                    elif os.path.isdir(symlink):
+                        print("d ", end="")
+                    else:
+                        print("f ", end="")
                 print(symlink, "->", destination)
-            sys.exit()
-    except AttributeError:
-        pass
 
     # Search symlinks
-    try:
+    if args.which == "search":
         if args.path is not None:
             if args.sort:
                 print("Working. This might take a long time...")
@@ -393,15 +419,29 @@ if __name__ == "__main__":
             else:
                 f = all_symlinks_generator(args.path, args.recursive)
             for symlink, destination in f:
+                if args.type:
+                    if not os.access(symlink, os.F_OK):
+                        print("b ", end="")
+                    elif os.path.isdir(symlink):
+                        print("d ", end="")
+                    else:
+                        print("f ", end="")
                 print(symlink, "->", destination)
-            sys.exit()
-    except AttributeError:
-        pass
+
+    # Search broken symlinks
+    if args.which == "broken":
+        if args.path is not None:
+            if args.sort:
+                print("Working. This might take a long time...")
+                f = all_symlinks(args.path, args.recursive)
+            else:
+                f = all_symlinks_generator(args.path, args.recursive)
+            for symlink, destination in f:
+                if not os.access(symlink, os.F_OK):
+                    print(symlink, "->", destination)
 
     # Create hardlink
-    try:
+    if args.which == "hardlink":
         if args.destination is not None and args.link is not None:
             create_hardlink(args.destination, args.link)
             sys.exit()
-    except AttributeError:
-        pass
