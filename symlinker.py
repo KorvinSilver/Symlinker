@@ -364,6 +364,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # No arguments given
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit()
@@ -375,7 +376,6 @@ if __name__ == "__main__":
                            args.symlink,
                            args.change_destination,
                            args.absolute_path)
-            sys.exit()
 
     # Batch modify symlinks
     if args.which == "batch":
@@ -393,6 +393,7 @@ if __name__ == "__main__":
     # Find symlink by pattern
     if args.which == "find":
         if args.path is not None and args.pattern is not None:
+            # Choose function based on args.sort
             if args.sort:
                 print("Working. This might take a long time...")
                 f = symlink_by_pattern(args.path, args.pattern, args.recursive)
@@ -402,6 +403,8 @@ if __name__ == "__main__":
                                                  args.recursive)
             for symlink, destination in f:
                 if args.type:
+                    # Insert b, d or f at the beginning of each line
+                    # for broken symlink, directory or file
                     if not os.access(symlink, os.F_OK):
                         print("b ", end="")
                     elif os.path.isdir(symlink):
@@ -413,6 +416,7 @@ if __name__ == "__main__":
     # Search symlinks
     if args.which == "search":
         if args.path is not None:
+            # Choose function based on args.sort
             if args.sort:
                 print("Working. This might take a long time...")
                 f = all_symlinks(args.path, args.recursive)
@@ -420,6 +424,8 @@ if __name__ == "__main__":
                 f = all_symlinks_generator(args.path, args.recursive)
             for symlink, destination in f:
                 if args.type:
+                    # Insert b, d or f at the beginning of each line
+                    # for broken symlink, directory or file
                     if not os.access(symlink, os.F_OK):
                         print("b ", end="")
                     elif os.path.isdir(symlink):
@@ -431,6 +437,7 @@ if __name__ == "__main__":
     # Search broken symlinks
     if args.which == "broken":
         if args.path is not None:
+            # Choose function based on args.sort
             if args.sort:
                 print("Working. This might take a long time...")
                 f = all_symlinks(args.path, args.recursive)
@@ -444,4 +451,3 @@ if __name__ == "__main__":
     if args.which == "hardlink":
         if args.destination is not None and args.link is not None:
             create_hardlink(args.destination, args.link)
-            sys.exit()
