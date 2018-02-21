@@ -29,6 +29,10 @@ $ ./symlinker.py batch -h
 ```
 
 ```
+$ ./symlinker.py broken -h
+```
+
+```
 $ ./symlinker.py hardlink -h
 ```
 
