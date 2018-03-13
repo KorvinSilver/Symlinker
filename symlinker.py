@@ -197,7 +197,7 @@ def symlink_by_pattern_generator(path, pattern, recursive):
     :rtype: tuple
     """
     for sym, dest in all_symlinks_generator(path, recursive):
-        if pattern in sym:
+        if pattern in dest:
             yield sym, dest
 
 
